@@ -1,0 +1,11 @@
+{
+  "name": "amp-plugin-tool-override-repro",
+  "private": true,
+  "scripts": {
+    "check:types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ampcode/plugin": "0.0.0-20260506002930-gb6c251f",
+    "typescript": "^5.9.3"
+  }
+}
