@@ -5,7 +5,7 @@
     "check:types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@ampcode/plugin": "0.0.0-20260506002930-gb6c251f",
+    "@ampcode/plugin": "0.0.0-20260607025156-g42a1e47",
     "typescript": "^5.9.3"
   }
 }

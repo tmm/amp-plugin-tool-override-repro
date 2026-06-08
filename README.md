@@ -1,10 +1,10 @@
 # Amp built-in tool interception
 
-Amp Neo plugin `tool.call` hook should intercept built-in tool calls. This previously worked before Neo for `read_web_page`, but the hook no longer appears to receive that call.
+Amp plugin `tool.call` hooks should intercept built-in tool calls. This previously worked before Neo for `read_web_page`, but the hook no longer appears to receive that call in current Amp.
 
 ## Setup
 
-With Amp Neo installed:
+With Amp installed:
 
 ```sh
 gh repo clone tmm/amp-plugin-tool-override-repro
@@ -19,19 +19,19 @@ amp plugins list
 
 Should see `✓ .amp/plugins/tool-override-repro.ts active`
 
-## Amp Neo Reproduction
+## Reproduction
 
 Run Amp from this directory:
 
 ```sh
 amp -x 'Use read_web_page to read https://ampcode.com/manual with objective "extract plugin documentation". If the returned text is exactly TOOL_CALL_INTERCEPTED_BY_PLUGIN, respond with exactly TOOL_CALL_INTERCEPTED_BY_PLUGIN and nothing else; otherwise summarize the result normally.' \
-    --log-file ./amp-new.log
+    --log-file ./amp-read-web-page.log
 ```
 
 Then check logs:
 
 ```sh
-rg "tool-override-repro|tool.call|read_web_page" ./amp-new.log
+rg "tool-override-repro|tool.call|read_web_page" ./amp-read-web-page.log
 ```
 
 ### Expected
@@ -50,32 +50,30 @@ Logs should include:
 
 ### Actual
 
-The plugin loads and `agent.start` fires, but the built-in `read_web_page` is not intercepted (does not return `TOOL_CALL_INTERCEPTED_BY_PLUGIN` and no plugin `tool.call` dispatch appears in the log).
+The plugin loads and `session.start` fires, but the built-in `read_web_page` is not intercepted (does not return `TOOL_CALL_INTERCEPTED_BY_PLUGIN` and no plugin `tool.call` dispatch appears in the log).
 
-## Non-Neo Works
+## Sanity Check: Other Tools Still Dispatch Hooks
 
-Run the same prompt with `--take-me-back`:
+The old `--take-me-back` flag no longer exists in current Amp, so this repro can no longer compare against the pre-Neo runtime directly.
+
+As a current-runtime sanity check, local executor tools still dispatch plugin hooks. Run:
 
 ```sh
-PLUGINS=all amp -x 'Use read_web_page to read https://ampcode.com/manual with objective "extract plugin documentation". If the returned text is exactly TOOL_CALL_INTERCEPTED_BY_PLUGIN, respond with exactly TOOL_CALL_INTERCEPTED_BY_PLUGIN and nothing else; otherwise summarize the result normally.' \
-    --log-file ./amp-old.log \
-    --take-me-back
+amp -x 'Use Bash to run: echo TOOL_EVENT_CHECK. Then report the command output.' \
+    --log-file ./amp-bash.log
 ```
 
 Then check logs:
 
 ```sh
-rg "tool-override-repro|tool.call|read_web_page" ./amp-old.log
+rg "tool-override-repro|tool.call|tool.result|Bash" ./amp-bash.log
 ```
 
-This does dispatch `tool.call` and prints the synthesized plugin result exactly:
+Logs should include `tool.call` and `tool.result` dispatches for `Bash`, for example:
 
 ```text
-TOOL_CALL_INTERCEPTED_BY_PLUGIN
+[tool-override-repro] tool.call tool=Bash
+[tool-override-repro] tool.result tool=Bash status=done
 ```
 
-Logs include:
-
-```text
-[tool-override-repro] tool.call tool=read_web_page
-```
+That suggests plugin hook dispatch still works for local executor tools, while `read_web_page` is on a path that bypasses `tool.call` interception.
