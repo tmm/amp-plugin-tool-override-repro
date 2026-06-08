@@ -51,29 +51,3 @@ Logs should include:
 ### Actual
 
 The plugin loads and `session.start` fires, but the built-in `read_web_page` is not intercepted (does not return `TOOL_CALL_INTERCEPTED_BY_PLUGIN` and no plugin `tool.call` dispatch appears in the log).
-
-## Sanity Check: Other Tools Still Dispatch Hooks
-
-The old `--take-me-back` flag no longer exists in current Amp, so this repro can no longer compare against the pre-Neo runtime directly.
-
-As a current-runtime sanity check, local executor tools still dispatch plugin hooks. Run:
-
-```sh
-amp -x 'Use Bash to run: echo TOOL_EVENT_CHECK. Then report the command output.' \
-    --log-file ./amp-bash.log
-```
-
-Then check logs:
-
-```sh
-rg "tool-override-repro|tool.call|tool.result|Bash" ./amp-bash.log
-```
-
-Logs should include `tool.call` and `tool.result` dispatches for `Bash`, for example:
-
-```text
-[tool-override-repro] tool.call tool=Bash
-[tool-override-repro] tool.result tool=Bash status=done
-```
-
-That suggests plugin hook dispatch still works for local executor tools, while `read_web_page` is on a path that bypasses `tool.call` interception.
